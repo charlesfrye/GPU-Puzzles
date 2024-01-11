@@ -130,7 +130,7 @@ class Scalar:
         return self / b
 
     def __iadd__(self, other):
-        assert False, "Instead of `out[] +=` use a local variable `acc + =`
+        assert False, "Instead of `out[] +=` use a local variable `acc + =`"
     
 class Table:
     def __init__(self, name, array):
