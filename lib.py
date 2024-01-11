@@ -25,6 +25,54 @@ class ScalarHistory:
             return ScalarHistory(self.last_fn, self.inputs + [b])
 
         return ScalarHistory(self.last_fn, self.inputs + b.inputs)
+
+    def __sub__(self, b):
+        if isinstance(b, (float, int)):
+            return self
+        if isinstance(b, Scalar):
+            return ScalarHistory(self.last_fn, self.inputs + [b])
+
+        return ScalarHistory(self.last_fn, self.inputs + b.inputs)
+
+    def __rsub__(self, b):
+        return self - b
+
+    def __mul__(self, b):
+        if isinstance(b, (float, int)):
+            return self
+        if isinstance(b, Scalar):
+            return ScalarHistory(self.last_fn, self.inputs + [b])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory(self.last_fn, self.inputs + b.inputs)
+
+        return ScalarHistory(self.last_fn, self.inputs + b.inputs)
+
+    def __rmul__(self, b):
+        return self * b
+    
+    def __truediv__(self, b):
+        if isinstance(b, (float, int)):
+            return self
+        if isinstance(b, Scalar):
+            return ScalarHistory(self.last_fn, self.inputs + [b])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory(self.last_fn, self.inputs + b.inputs)
+
+        return ScalarHistory(self.last_fn, self.inputs + b.inputs)
+
+    def __rtruediv__(self, b):
+        return self / b
+
+    def __pow__(self, b):
+        if isinstance(b, (float, int)):
+            return self
+        if isinstance(b, Scalar):
+            return ScalarHistory(self.last_fn, self.inputs + [b])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory(self.last_fn, self.inputs + b.inputs)
+
+    def __rpow__ (self, b):
+        return self ** b
         
 class Scalar:
     def __init__(self, location):
@@ -33,8 +81,31 @@ class Scalar:
     def __mul__(self, b):
         if isinstance(b, (float, int)):
             return ScalarHistory("id", [self])
-        return ScalarHistory("*", [self, b])
+        if isinstance(b, Scalar):
+            return ScalarHistory("*", [self, b])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory("*", [self] + b.inputs)
 
+    def __pow__(self, b):
+        if isinstance(b, (float, int)):
+            return ScalarHistory("id", [self])
+        if isinstance(b, Scalar):
+            return ScalarHistory("^", [self, b])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory("^", [self] + b.inputs)
+
+    def __rmul__(self, b):
+        return self * b
+
+    def __sub__(self, b):
+        if isinstance(b, (float, int)):
+            return ScalarHistory("id", [self])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory("-", [self] + b.inputs)
+        return ScalarHistory("-", [self, b])
+
+    def __rsub__(self, b):
+        return b + (-1) * self
 
     def __radd__(self, b):
         return self + b
@@ -42,10 +113,24 @@ class Scalar:
     def __add__(self, b):
         if isinstance(b, (float, int)):
             return ScalarHistory("id", [self])
-        return ScalarHistory("+", [self, b])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory("+", [self] + b.inputs)
+        if isinstance(b, Scalar):
+            return ScalarHistory("+", [self, b])
+
+    def __truediv__(self, b):
+        if isinstance(b, (float, int)):
+            return ScalarHistory("id", [self])
+        if isinstance(b, ScalarHistory):
+            return ScalarHistory("/", [self] + b.inputs)
+        if isinstance(b, Scalar):
+            return ScalarHistory("/", [self, b])
+
+    def __rtruediv__(self, b):
+        return self / b
 
     def __iadd__(self, other):
-        assert False, "Instead of `out[] +=` use a local variable `acc + =`"
+        assert False, "Instead of `out[] +=` use a local variable `acc + =`
     
 class Table:
     def __init__(self, name, array):
